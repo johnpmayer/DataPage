@@ -1,0 +1,14 @@
+maybe i don't need singletons or reflection
+
+just make a storable instance for schemas
+
+prepend it with an int so you know how far to look
+
+ugh that sucks that I have to read all of that and keep track, but oh well
+
+it seems then that I'll have to loop through to get at it
+
+so system table 1: actually just a list of (header,column type) pairs
+
+system table 2 is the huge allocation table
+
