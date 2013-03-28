@@ -1,21 +1,42 @@
 
 {-# OPTIONS -Wall #-}
 {-# LANGUAGE GADTs, DataKinds, KindSignatures, RankNTypes,
-    FlexibleInstances, PolyKinds, ScopedTypeVariables #-}
+    FlexibleInstances, PolyKinds, ScopedTypeVariables,
+    TemplateHaskell, TypeFamilies #-}
 
 module ByteNat where
 
 import Data.Int
+import Data.Singletons
 import Foreign.Ptr
 import Foreign.Storable
 
-data Nat = Zero | Succ Nat
+$(singletons [d| 
+
+    data Nat = Zero | Succ Nat 
+   
+    {-
+    lt :: Nat -> Nat -> Bool
+    lt Zero Zero = False
+    lt _ Zero = False
+    lt Zero _ = True
+    -}
+    
+    |])
+
+type N0 = 'Zero
+type N1 = 'Succ N0
+type N2 = 'Succ N1
+type N3 = 'Succ N2
+type N4 = 'Succ N3
+
+type MaxNColumns = N4
 
 data ByteNat :: Nat -> * where
-  BN0 :: ByteNat Zero
-  BN1 :: ByteNat (Succ Zero)
-  BN2 :: ByteNat (Succ (Succ Zero))
-  BN3 :: ByteNat (Succ (Succ (Succ Zero)))
+  BN0 :: ByteNat N0
+  BN1 :: ByteNat N1
+  BN2 :: ByteNat N2
+  BN3 :: ByteNat N3
 
 -- we would like an instance of Storable for ByteNat
 -- this fails because ByteNat :: Nat -> *

@@ -5,14 +5,22 @@
 
 module Object where
 
+import ByteNat
+
 import Data.Int
 import Data.Singletons
+import Foreign.Ptr
+import Foreign.Storable
+
+data FiniteSet :: Nat -> * where
+    FZero :: FiniteSet ('Succ n)
+    FSucc :: FiniteSet n -> FiniteSet ('Succ n)
 
 $(singletons [d|
 
     data U = INT | BOOL | CHAR
         deriving (Eq) 
-    
+
     |])
 
 type family DBType (u :: U) :: *
@@ -22,18 +30,40 @@ type instance DBType CHAR = Char
 
 $(singletons [d|
 
-    data CName = CA|CB|CC|CD
+    data ADTChar = CA|CB|CC|CD
 
-    data Attribute = Attr [CName] U
+    data ColumnDef = Attr [ADTChar] U
 
-    data Schema = Sch [Attribute]
+    data TableDef = Sch [ColumnDef]
 
     |])
 
-data Row :: Schema -> * where
-    EmptyRow :: Row (Sch '[])
-    ConsRow :: DBType u -> Row ('Sch s) -> Row (Sch (('Attr name u) ': s))
+data SomeADTChar = forall (c :: ADTChar). SomeADTChar (SADTChar c)
 
-data SomeSSchema = forall (s :: Schema). SomeSSchema (SSchema s)
+cnameFromInt :: Int8 -> SomeADTChar
+cnameFromInt 0 = SomeADTChar SCA
+cnameFromInt 1 = SomeADTChar SCB
+cnameFromInt 2 = SomeADTChar SCC
+cnameFromInt 3 = SomeADTChar SCD
+cnameFromInt _ = undefined
 
+intFromADTChar :: SomeADTChar -> Int8
+intFromADTChar (SomeADTChar SCA) = 0
+intFromADTChar (SomeADTChar SCB) = 1
+intFromADTChar (SomeADTChar SCC) = 2
+intFromADTChar (SomeADTChar SCD) = 3
 
+instance Storable SomeADTChar where
+    sizeOf _ = sizeOf (0 :: Int8)
+    alignment _ = alignment (0 :: Int8)
+    peek ptr = fmap cnameFromInt (peek (castPtr ptr))
+    poke ptr a = poke (castPtr ptr) (intFromADTChar a)
+
+data SomeSTableDef = forall (s :: TableDef). SomeSTableDef (STableDef s)
+
+data Row :: Nat -> TableDef -> * where
+    EmptyRow :: Row 'Zero ('Sch '[])
+    ConsRow :: DBType u -> Row n ('Sch s) 
+            -> Row ('Succ n) ('Sch (('Attr name u) ': s))
+
+data SomeRow = forall (t :: TableDef). SomeRow (Row MaxNColumns t)
