@@ -34,7 +34,7 @@ $(singletons [d|
 
     data ColumnDef = Attr [ADTChar] U
 
-    data TableDef = Sch [ColumnDef]
+    data TableDef = Sch Nat [ColumnDef]
 
     |])
 
@@ -62,8 +62,8 @@ instance Storable SomeADTChar where
 data SomeSTableDef = forall (s :: TableDef). SomeSTableDef (STableDef s)
 
 data Row :: Nat -> TableDef -> * where
-    EmptyRow :: Row 'Zero ('Sch '[])
-    ConsRow :: DBType u -> Row n ('Sch s) 
-            -> Row ('Succ n) ('Sch (('Attr name u) ': s))
+    EmptyRow :: Row 'Zero ('Sch 'Zero '[])
+    ConsRow :: DBType u -> Row n ('Sch n s) 
+            -> Row ('Succ n) ('Sch ('Succ n) (('Attr name u) ': s))
 
 data SomeRow = forall (t :: TableDef). SomeRow (Row MaxNColumns t)

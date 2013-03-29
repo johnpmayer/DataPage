@@ -4,28 +4,26 @@
 module Page where
 
 import Data.Int
-import Foreign.Storable
+import Foreign.Storable ()
 
 import ByteNat ()
-import Object ()
+import Object
 import Schema ()
 
 type ObjectId = Int64
 type PageAddr = Int64
 
-data AllocPage = AllocPage [(ObjectId, PageAddr)]
+data GlobalMetaPage = GMP
+    { freeExtentHead :: PageAddr
+    , objectPageHeads :: [(ObjectId, PageAddr, SomeSTableDef)] 
+    }
 
-instance Storable AllocPage where
-    sizeOf = undefined
-    alignment = undefined
-    peek _ = undefined
-    poke _ _ = undefined
+data TablePage n schema = TP
+    { freePageHead :: PageAddr
+    , prevPage :: Maybe PageAddr
+    , nextPage :: Maybe PageAddr
+    , rows :: [Row n schema] 
+    }
 
-data Object
-
-data ObjectPage = ObjectPage [Object]
-
-data Row a
-
-data DataPage schema = DataPage [Row schema]
+-- instance Storable ... where
 
