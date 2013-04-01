@@ -6,6 +6,7 @@
 module Object where
 
 import ByteNat
+import Schema
 
 import Data.Int
 import Data.Singletons
@@ -16,54 +17,32 @@ data FiniteSet :: Nat -> * where
     FZero :: FiniteSet ('Succ n)
     FSucc :: FiniteSet n -> FiniteSet ('Succ n)
 
-$(singletons [d|
+data SomeAChar = forall (c :: AChar). SomeAChar (SAChar c)
 
-    data U = INT | BOOL | CHAR
-        deriving (Eq) 
-
-    |])
-
-type family DBType (u :: U) :: *
-type instance DBType INT = Int64
-type instance DBType BOOL = Bool
-type instance DBType CHAR = Char
-
-$(singletons [d|
-
-    data ADTChar = CA|CB|CC|CD
-
-    data ColumnDef = Attr [ADTChar] U
-
-    data TableDef = Sch Nat [ColumnDef]
-
-    |])
-
-data SomeADTChar = forall (c :: ADTChar). SomeADTChar (SADTChar c)
-
-cnameFromInt :: Int8 -> SomeADTChar
-cnameFromInt 0 = SomeADTChar SCA
-cnameFromInt 1 = SomeADTChar SCB
-cnameFromInt 2 = SomeADTChar SCC
-cnameFromInt 3 = SomeADTChar SCD
+cnameFromInt :: Int8 -> SomeAChar
+cnameFromInt 0 = SomeAChar SCA
+cnameFromInt 1 = SomeAChar SCB
+cnameFromInt 2 = SomeAChar SCC
+cnameFromInt 3 = SomeAChar SCD
 cnameFromInt _ = undefined
 
-intFromADTChar :: SomeADTChar -> Int8
-intFromADTChar (SomeADTChar SCA) = 0
-intFromADTChar (SomeADTChar SCB) = 1
-intFromADTChar (SomeADTChar SCC) = 2
-intFromADTChar (SomeADTChar SCD) = 3
+intFromAChar :: SomeAChar -> Int8
+intFromAChar (SomeAChar SCA) = 0
+intFromAChar (SomeAChar SCB) = 1
+intFromAChar (SomeAChar SCC) = 2
+intFromAChar (SomeAChar SCD) = 3
 
-instance Storable SomeADTChar where
+instance Storable SomeAChar where
     sizeOf _ = sizeOf (0 :: Int8)
     alignment _ = alignment (0 :: Int8)
     peek ptr = fmap cnameFromInt (peek (castPtr ptr))
-    poke ptr a = poke (castPtr ptr) (intFromADTChar a)
+    poke ptr a = poke (castPtr ptr) (intFromAChar a)
 
-data SomeSTableDef = forall (s :: TableDef). SomeSTableDef (STableDef s)
+data SomeSSchema = forall (s :: Schema). SomeSSchema (SSchema s)
 
-data Row :: Nat -> TableDef -> * where
+data Row :: Nat -> Schema -> * where
     EmptyRow :: Row 'Zero ('Sch 'Zero '[])
-    ConsRow :: DBType u -> Row n ('Sch n s) 
+    ConsRow :: Store u -> Row n ('Sch n s) 
             -> Row ('Succ n) ('Sch ('Succ n) (('Attr name u) ': s))
 
-data SomeRow = forall (t :: TableDef). SomeRow (Row MaxNColumns t)
+data SomeRow = forall (t :: Schema). SomeRow (Row MaxNColumns t)

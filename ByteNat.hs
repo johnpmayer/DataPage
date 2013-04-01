@@ -15,13 +15,6 @@ $(singletons [d|
 
     data Nat = Zero | Succ Nat 
    
-    {-
-    lt :: Nat -> Nat -> Bool
-    lt Zero Zero = False
-    lt _ Zero = False
-    lt Zero _ = True
-    -}
-    
     |])
 
 type N0 = 'Zero

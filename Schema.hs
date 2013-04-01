@@ -11,11 +11,7 @@ import Data.Reflection
 import Data.Singletons
 import Foreign.Storable
 
-$(singletons [d|
-    
-    data Nat = Succ Nat | Zero deriving (Eq, Ord)
-    
-    |])
+import ByteNat
 
 $(singletons [d|
 
@@ -28,7 +24,7 @@ $(singletons [d|
     
     data Attribute = Attr [AChar] U
     
-    data Schema = Sch [Attribute]
+    data Schema = Sch Nat [Attribute]
     
     |])
 
